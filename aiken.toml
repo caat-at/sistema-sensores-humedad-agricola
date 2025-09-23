@@ -1,0 +1,15 @@
+# Configuración del proyecto Aiken v1.1.19
+name = "agricultural/humidity-sensor"
+version = "1.0.0"
+license = "Apache-2.0"
+description = "Contrato inteligente para gestión de datos de sensores de humedad agrícola"
+
+[repository]
+platform = "github"
+user = "agricultural"
+project = "humidity-sensor"
+
+[[dependencies]]
+source = "github"
+name = "aiken-lang/stdlib"
+version = "v2.1.0"

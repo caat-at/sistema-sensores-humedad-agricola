@@ -1,0 +1,18 @@
+﻿# Archivos de construcción de Aiken
+build/
+*.lock
+
+# Archivos temporales
+*.tmp
+temp/
+
+# Archivos de configuración local
+.env
+script.addr
+
+# Blueprints compilados (pueden regenerarse)
+blueprint/blueprint
+
+# Archivos de Windows
+Thumbs.db
+desktop.ini

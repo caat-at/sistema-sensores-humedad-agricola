@@ -1,0 +1,334 @@
+{
+  "preamble": {
+    "title": "agricultural/humidity-sensor",
+    "description": "Contrato inteligente para gestión de datos de sensores de humedad agrícola",
+    "version": "1.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.19+e525483"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "humidity_sensor.humidity_sensor_validator.spend",
+      "datum": {
+        "title": "datum_opt",
+        "schema": {
+          "$ref": "#/definitions/agricultural~1sensor_types~1SensorConfig"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/humidity_sensor~1SensorRedeemer"
+        }
+      },
+      "compiledCode": "59072d0101003229800aba2aba1aab9faab9eaab9dab9a9bae002488888896600264653001300800198041804800cdc3a400530080024888966002600460126ea800e33001300a3754007370e90004dc3a4009370e90034c024dd5002244444653001159800980298079baa0018cc004c048c040dd5000c96600266e252080a0b7e6eb5b001899b890014820243c67f2a0006294100f48c04cc050c0500064602660286028602800323013301430143014301400191809980a000cc03cdd500548c04cc050c050c050c050c0500066e2520009119198008009bac3015301630163016301630163016301630163013375400644b30010018a508acc004cdc79bae30160010038a51899801001180b800a02440549111111111192cc004c0400162b30013300201201889800980e980d9baa0158a5040651598009809802c4c96600266e3cdd7180f180e1baa001375c603c60386ea80322b30015980098021bad300a301c375400315980099b89375a601460386ea800520c8018acc004cdc4a411e066eb4c024c070dd5000c56600266e24dd69804980e1baa001482c0262b30013004375a601060386ea80062b3001337126eb4c020c070dd5000a41900315980099b89483fea7a954dd6980f180e1baa3005301c375400315980099b89375a603c60386ea8c014c070dd5000a410155d4ab15980099b89483ff4f52ac04dd69803980e1baa3005301c37540031337126eb4c01cc070dd51802980e1baa001482035352ac06294101a452820348a50406914a080d2294101a452820348a50406914a080d2294101a456600266e1cdc69bae301e301f301f301f301f301f301f301f301c3754002904000c4c02cdd69803980e1baa0018a50406914a080d2294101a180e980d9baa0158acc004c03c016264b30013371e6eb8c078004dd7180f180e1baa00c8acc004cc00c04c06626004603c603e00314a080d2294101a180d9baa0158992cc004cdc79bae301e301c37540026eb8c078c070dd5006456600264b30013012001899b88375a6012603a6ea8008dd69805980e9baa00d8acc004c054006266e20dd69805180e9baa00d375a6012603a6ea800a2b300130110018a518acc004c0400062946294501b2036406c80d8c06cdd51803980e1baa001898059bad3009301c375400314a080d2294101a180e980d9baa015406480c901912cc004c00cdd69804980d9baa0018acc004cdc49bad3008301b3754002906400c56600266e20dd69804980d9baa001375a601060366ea80062b300133712903c1bad3004301b375400315980099b89375a600860366ea80052080c60a8acc004c00cdd69803980d9baa001899b89375a600e60366ea800520c8018a50406514a080ca2941019452820328a50406514a080c91640392259800980398089baa0028991919191919194c004dd6980d800cdd7180d803cdd7180d8034dd6980d802cdd6980d8024dd6980d801cdd6980d80124444444b30013023008807c590210c06c004c068004c064004c060004c05c004c058004c048dd50014590104c048019222598009804002c4c966002602e00313300330160010048b202a3013375401b1598009805802c4c966002602e003132598009805180a1baa001899191919191919194c004dd7180f800cdd7180f8044dd6980f803cdd6980f8034dd6980f802cdd6980f8024c07c009222222259800981380444c966002603460486ea8006264646644b3001302c0038992cc004c07c0062b3001302a375400f01a8b20568acc004c0880062b3001302a375400f01a8b20568acc004c0780062b3001302a375400f01a8b20568acc004c0740062b3001302a375400f01a8b20568b205040a0814102818141baa0068b2054375a60520026eb4c0a4008c0a4004c094dd5000c5902318130054590250c07c004c078004c074004c070004c06c004c068004c064004c054dd5000c59013180b000c5901518099baa00d8acc004c01c0162646644b30013019001899802980c0008034590171bae301600130170013013375401b1598009803002c4c966002602e003132598009805180a1baa00189919191919194c004dd7180e800cdd7180e8034c0740126eb4c07400e6eb4c0740092222259800981180344c8cc8966002603000515980098119baa003800c590244566002603600515980098119baa003800c590244566002602e00515980098119baa003800c590244566002602c00515980098119baa003800c59024456600266e1d20080028acc004c08cdd5001c0062c81222c8109021204240848108c080dd50008992cc004c05c0062b30013022375400b0128b20468acc004c0680062b30013022375400b0128b20468acc004c0580062b30013022375400b0128b20468acc004c0540062b30013022375400b0128b20468b20404080810102018101baa004302200a8b2042180e800980e000980d800980d000980c800980a9baa0018b202630160018b202a3013375401b1640448089011202218089809002a2c8040601000260086ea802229344d959002130101400001",
+      "hash": "c62539910fa243dec22a2b6c7858836533727f79477d9be320b9a8d2"
+    },
+    {
+      "title": "humidity_sensor.humidity_sensor_validator.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59072d0101003229800aba2aba1aab9faab9eaab9dab9a9bae002488888896600264653001300800198041804800cdc3a400530080024888966002600460126ea800e33001300a3754007370e90004dc3a4009370e90034c024dd5002244444653001159800980298079baa0018cc004c048c040dd5000c96600266e252080a0b7e6eb5b001899b890014820243c67f2a0006294100f48c04cc050c0500064602660286028602800323013301430143014301400191809980a000cc03cdd500548c04cc050c050c050c050c0500066e2520009119198008009bac3015301630163016301630163016301630163013375400644b30010018a508acc004cdc79bae30160010038a51899801001180b800a02440549111111111192cc004c0400162b30013300201201889800980e980d9baa0158a5040651598009809802c4c96600266e3cdd7180f180e1baa001375c603c60386ea80322b30015980098021bad300a301c375400315980099b89375a601460386ea800520c8018acc004cdc4a411e066eb4c024c070dd5000c56600266e24dd69804980e1baa001482c0262b30013004375a601060386ea80062b3001337126eb4c020c070dd5000a41900315980099b89483fea7a954dd6980f180e1baa3005301c375400315980099b89375a603c60386ea8c014c070dd5000a410155d4ab15980099b89483ff4f52ac04dd69803980e1baa3005301c37540031337126eb4c01cc070dd51802980e1baa001482035352ac06294101a452820348a50406914a080d2294101a452820348a50406914a080d2294101a456600266e1cdc69bae301e301f301f301f301f301f301f301f301c3754002904000c4c02cdd69803980e1baa0018a50406914a080d2294101a180e980d9baa0158acc004c03c016264b30013371e6eb8c078004dd7180f180e1baa00c8acc004cc00c04c06626004603c603e00314a080d2294101a180d9baa0158992cc004cdc79bae301e301c37540026eb8c078c070dd5006456600264b30013012001899b88375a6012603a6ea8008dd69805980e9baa00d8acc004c054006266e20dd69805180e9baa00d375a6012603a6ea800a2b300130110018a518acc004c0400062946294501b2036406c80d8c06cdd51803980e1baa001898059bad3009301c375400314a080d2294101a180e980d9baa015406480c901912cc004c00cdd69804980d9baa0018acc004cdc49bad3008301b3754002906400c56600266e20dd69804980d9baa001375a601060366ea80062b300133712903c1bad3004301b375400315980099b89375a600860366ea80052080c60a8acc004c00cdd69803980d9baa001899b89375a600e60366ea800520c8018a50406514a080ca2941019452820328a50406514a080c91640392259800980398089baa0028991919191919194c004dd6980d800cdd7180d803cdd7180d8034dd6980d802cdd6980d8024dd6980d801cdd6980d80124444444b30013023008807c590210c06c004c068004c064004c060004c05c004c058004c048dd50014590104c048019222598009804002c4c966002602e00313300330160010048b202a3013375401b1598009805802c4c966002602e003132598009805180a1baa001899191919191919194c004dd7180f800cdd7180f8044dd6980f803cdd6980f8034dd6980f802cdd6980f8024c07c009222222259800981380444c966002603460486ea8006264646644b3001302c0038992cc004c07c0062b3001302a375400f01a8b20568acc004c0880062b3001302a375400f01a8b20568acc004c0780062b3001302a375400f01a8b20568acc004c0740062b3001302a375400f01a8b20568b205040a0814102818141baa0068b2054375a60520026eb4c0a4008c0a4004c094dd5000c5902318130054590250c07c004c078004c074004c070004c06c004c068004c064004c054dd5000c59013180b000c5901518099baa00d8acc004c01c0162646644b30013019001899802980c0008034590171bae301600130170013013375401b1598009803002c4c966002602e003132598009805180a1baa00189919191919194c004dd7180e800cdd7180e8034c0740126eb4c07400e6eb4c0740092222259800981180344c8cc8966002603000515980098119baa003800c590244566002603600515980098119baa003800c590244566002602e00515980098119baa003800c590244566002602c00515980098119baa003800c59024456600266e1d20080028acc004c08cdd5001c0062c81222c8109021204240848108c080dd50008992cc004c05c0062b30013022375400b0128b20468acc004c0680062b30013022375400b0128b20468acc004c0580062b30013022375400b0128b20468acc004c0540062b30013022375400b0128b20468b20404080810102018101baa004302200a8b2042180e800980e000980d800980d000980c800980a9baa0018b202630160018b202a3013375401b1640448089011202218089809002a2c8040601000260086ea802229344d959002130101400001",
+      "hash": "c62539910fa243dec22a2b6c7858836533727f79477d9be320b9a8d2"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "agricultural/sensor_types/AlertSeverity": {
+      "title": "AlertSeverity",
+      "anyOf": [
+        {
+          "title": "Info",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Warning",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "Critical",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        },
+        {
+          "title": "Emergency",
+          "dataType": "constructor",
+          "index": 3,
+          "fields": []
+        }
+      ]
+    },
+    "agricultural/sensor_types/AlertType": {
+      "title": "AlertType",
+      "anyOf": [
+        {
+          "title": "LowHumidity",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "HighHumidity",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "SensorMalfunction",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        },
+        {
+          "title": "BatteryLow",
+          "dataType": "constructor",
+          "index": 3,
+          "fields": []
+        },
+        {
+          "title": "CommunicationLost",
+          "dataType": "constructor",
+          "index": 4,
+          "fields": []
+        }
+      ]
+    },
+    "agricultural/sensor_types/GpsCoordinates": {
+      "title": "GpsCoordinates",
+      "anyOf": [
+        {
+          "title": "GpsCoordinates",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "latitude",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "longitude",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "agricultural/sensor_types/HumidityAlert": {
+      "title": "HumidityAlert",
+      "anyOf": [
+        {
+          "title": "HumidityAlert",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "sensor_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "alert_type",
+              "$ref": "#/definitions/agricultural~1sensor_types~1AlertType"
+            },
+            {
+              "title": "severity",
+              "$ref": "#/definitions/agricultural~1sensor_types~1AlertSeverity"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "humidity_value",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "message",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "agricultural/sensor_types/HumiditySensorData": {
+      "title": "HumiditySensorData",
+      "anyOf": [
+        {
+          "title": "HumiditySensorData",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "sensor_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "humidity_level",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "soil_temperature",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "battery_level",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "gps_location",
+              "$ref": "#/definitions/agricultural~1sensor_types~1GpsCoordinates"
+            },
+            {
+              "title": "status",
+              "$ref": "#/definitions/agricultural~1sensor_types~1SensorStatus"
+            },
+            {
+              "title": "signature",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "agricultural/sensor_types/SensorConfig": {
+      "title": "SensorConfig",
+      "anyOf": [
+        {
+          "title": "SensorConfig",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "sensor_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "owner_key",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "min_humidity",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "max_humidity",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "alert_threshold",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "measurement_interval",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "calibration_factor",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "agricultural/sensor_types/SensorStatus": {
+      "title": "SensorStatus",
+      "anyOf": [
+        {
+          "title": "Active",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Maintenance",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "Error",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        },
+        {
+          "title": "Offline",
+          "dataType": "constructor",
+          "index": 3,
+          "fields": []
+        }
+      ]
+    },
+    "humidity_sensor/SensorRedeemer": {
+      "title": "SensorRedeemer",
+      "anyOf": [
+        {
+          "title": "RegisterSensor",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "config",
+              "$ref": "#/definitions/agricultural~1sensor_types~1SensorConfig"
+            }
+          ]
+        },
+        {
+          "title": "SubmitData",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": [
+            {
+              "title": "sensor_data",
+              "$ref": "#/definitions/agricultural~1sensor_types~1HumiditySensorData"
+            }
+          ]
+        },
+        {
+          "title": "UpdateConfig",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": [
+            {
+              "title": "sensor_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "new_config",
+              "$ref": "#/definitions/agricultural~1sensor_types~1SensorConfig"
+            }
+          ]
+        },
+        {
+          "title": "GenerateAlert",
+          "dataType": "constructor",
+          "index": 3,
+          "fields": [
+            {
+              "title": "alert",
+              "$ref": "#/definitions/agricultural~1sensor_types~1HumidityAlert"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
