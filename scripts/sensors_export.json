@@ -1,0 +1,38 @@
+[
+  {
+    "sensor_id": "SENSOR_001",
+    "location_latitude": -34.58,
+    "location_longitude": -58.45,
+    "location_zone_name": "Campo Norte - Parcela A",
+    "min_humidity_threshold": 25,
+    "max_humidity_threshold": 75,
+    "reading_interval_minutes": 120,
+    "status": "Active",
+    "owner_pkh": "2ca74e9e29a7de08f4fd64cd203241583ee0ba7adfb8acce52c9d4c0",
+    "installed_date": "2025-10-14T22:46:06.980000"
+  },
+  {
+    "sensor_id": "SENSOR_002",
+    "location_latitude": -34.6,
+    "location_longitude": -58.47,
+    "location_zone_name": "Campo Sur - Parcela B",
+    "min_humidity_threshold": 35,
+    "max_humidity_threshold": 75,
+    "reading_interval_minutes": 90,
+    "status": "Active",
+    "owner_pkh": "2ca74e9e29a7de08f4fd64cd203241583ee0ba7adfb8acce52c9d4c0",
+    "installed_date": "2025-10-14T22:51:48.050000"
+  },
+  {
+    "sensor_id": "SENSOR_003",
+    "location_latitude": -34.62,
+    "location_longitude": -58.5,
+    "location_zone_name": "Campo Este - Parcela C",
+    "min_humidity_threshold": 40,
+    "max_humidity_threshold": 80,
+    "reading_interval_minutes": 120,
+    "status": "Active",
+    "owner_pkh": "2ca74e9e29a7de08f4fd64cd203241583ee0ba7adfb8acce52c9d4c0",
+    "installed_date": "2025-10-19T08:31:28.927000"
+  }
+]

@@ -1,18 +1,261 @@
-﻿# Archivos de construcción de Aiken
-build/
-*.lock
-
-# Archivos temporales
-*.tmp
-temp/
-
-# Archivos de configuración local
+# ============================================
+# Archivos Sensibles - NUNCA VERSIONAR
+# ============================================
 .env
-script.addr
+.env.local
+.env.production
+*.env
+!.env.example
 
-# Blueprints compilados (pueden regenerarse)
-blueprint/blueprint
+# Claves privadas y wallets
+*.skey
+*.vkey
+*.addr
+payment.skey
+payment.vkey
+stake.skey
+stake.vkey
+wallet.json
+seed.txt
+recovery-phrase.txt
+**/recovery-phrase.txt
+**/cli-keys/
+cli-keys/
 
-# Archivos de Windows
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+.virtualenv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# ============================================
+# Node.js / JavaScript
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.npm
+.yarn/
+
+# ============================================
+# Cardano / Blockchain
+# ============================================
+# OpShin build artifacts (se recomienda NO versionar)
+contracts/opshin/build/
+
+# Transacciones firmadas
+*.signed
+*.raw
+*.txbody
+
+# Datos de testnet locales
+db/
+chain-data/
+node-data/
+
+# ============================================
+# PostgreSQL / Base de Datos
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+pg_log/
+*.dump
+*.sql.backup
+
+# ============================================
+# Archivos Temporales
+# ============================================
+*.tmp
+*.temp
+temp/
+tmp/
+*.log
+*.swp
+*.swo
+*~
+.cache/
+
+# ============================================
+# IDE y Editores
+# ============================================
+# VSCode
+.vscode/
+.vscode-test/
+*.code-workspace
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Claude Code
+.claude/
+
+# ============================================
+# Sistema Operativo
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Windows
 Thumbs.db
-desktop.ini
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Backup y Archivos de Proyecto
+# ============================================
+*.bak
+*.backup
+*.old
+nul
+
+# Old implementation
+_old_aiken_implementation/
+old/
+backup/
+
+# ============================================
+# Documentación Temporal de Desarrollo
+# ============================================
+# Estos archivos fueron creados durante el desarrollo
+# y contienen información redundante ya documentada en README.md
+API_EJEMPLOS.md
+API_REST_COMPLETADA.md
+DECODE_DATUM_ENHANCED.md
+DEDUPLICACION_SENSORES_COMPLETADA.md
+DISENO_OPTIMIZADO.md
+ESTADO_ACTUAL.md
+EXITO_*.md
+FRONTEND_DASHBOARD_COMPLETADO.md
+GUIA_*.md
+IMPLEMENTACION_COMPLETA_CODIGO.md
+INSTRUCCIONES_USO.md
+INTEGRACION_POSTGRESQL_COMPLETA.md
+INVESTIGACION_PYCARDANO_TX.md
+LIMPIEZA_COMPLETADA.md
+LUCID_VS_LUCID_EVOLUTION.md
+MEJORAS_DECODE_DATUM.md
+MIGRACION_OPSHIN.md
+MVP_OPCION_B_RESUMEN.md
+PASOS_*.md
+PREVENCION_DUPLICADOS_SENSOR_ID.md
+PROGRESO_REGISTER_SENSOR.md
+QUICK_START.md
+RESUMEN_*.md
+RUTA_PRACTICA_MVP.md
+TROUBLESHOOTING.md
+TXHASH_*.md
+UBICACION_PROYECTO.md
+
+# Scripts de análisis temporal
+analyze_datum_content.py
+cleanup_datum*.py
+debug_sensor_*.py
+
+# ============================================
+# Archivos de Aiken (Migrado a OpShin)
+# ============================================
+aiken.toml
+contract-compiled.json.json
+plutus.json
+lib/
+validators/
+tests/sensor_validation_tests.ak
+humidity-sensor/
+docs/agricultural/
+docs/css/
+docs/js/
+docs/search-data.js
+docs/favicon.svg
+docs/index.html
+docs/humidity_sensor.html
+Flujo.png
+Flujo1.png
+Flujo*.png
+
+# ============================================
+# Mesh Client (No usado actualmente)
+# ============================================
+mesh-client/
+
+# ============================================
+# Logs y Reportes
+# ============================================
+*.log
+logs/
+*.out
+*.err
+
+# ============================================
+# Archivos de Configuración Local
+# ============================================
+config.local.json
+settings.local.json
