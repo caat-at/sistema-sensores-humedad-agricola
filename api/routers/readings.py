@@ -4,11 +4,16 @@ Router para endpoints de lecturas
 """
 
 import sys
+import os
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, status, Query, Depends
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 # Agregar pycardano-client al path
 pycardano_path = Path(__file__).parent.parent.parent / "pycardano-client"
@@ -50,7 +55,8 @@ def reading_to_response(reading) -> ReadingResponse:
 @router.get("", response_model=List[ReadingResponse])
 async def list_readings(
     sensor_id: Optional[str] = Query(None, description="Filtrar por ID de sensor"),
-    limit: Optional[int] = Query(None, ge=1, le=100, description="Límite de resultados")
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Límite de resultados"),
+    db: Optional[Session] = Depends(get_db) if DB_AVAILABLE else None
 ):
     """
     Lista todas las lecturas recientes
@@ -59,6 +65,50 @@ async def list_readings(
     - **limit**: Opcional - Limitar cantidad de resultados (máx 100)
     """
     try:
+        # Si PostgreSQL está disponible, consultar desde ahí (incluye tx_hash)
+        if DB_AVAILABLE and db is not None:
+            from api.database.models import ReadingHistory
+
+            # Mostrar TODAS las lecturas (tanto pendientes como on-chain)
+            query = db.query(ReadingHistory)
+
+            # Filtrar por sensor si se especifica
+            if sensor_id:
+                query = query.filter(ReadingHistory.sensor_id == sensor_id)
+
+            # Ordenar por timestamp descendente
+            query = query.order_by(ReadingHistory.timestamp.desc())
+
+            # Aplicar límite
+            if limit:
+                query = query.limit(limit)
+
+            db_readings = query.all()
+
+            # Calcular alert_level basado en umbrales
+            def calculate_alert_level(humidity: int) -> str:
+                if humidity < 20 or humidity > 85:
+                    return "Critical"
+                elif humidity < 40:
+                    return "Low"
+                elif humidity > 70:
+                    return "High"
+                else:
+                    return "Normal"
+
+            return [
+                ReadingResponse(
+                    sensor_id=r.sensor_id,
+                    humidity_percentage=r.humidity_percentage,
+                    temperature_celsius=r.temperature_celsius,
+                    timestamp=r.timestamp.isoformat(),
+                    alert_level=calculate_alert_level(r.humidity_percentage),
+                    tx_hash=r.tx_hash
+                )
+                for r in db_readings
+            ]
+
+        # Fallback: consultar desde blockchain (sin tx_hash)
         blockchain = BlockchainService()
         readings = blockchain.get_all_readings()
 
@@ -100,14 +150,24 @@ async def add_reading(
     - **Critical**: Humedad < 20% o > 85%
     """
     try:
-        blockchain = BlockchainService()
+        # Verificar modo de operación
+        use_rollup_mode = os.getenv('USE_ROLLUP_MODE', 'false').lower() == 'true'
 
-        # Enviar transacción a la blockchain
-        tx_hash = blockchain.add_reading(
-            sensor_id=reading_data.sensor_id,
-            humidity=reading_data.humidity_percentage,
-            temperature=reading_data.temperature_celsius
-        )
+        tx_hash = None
+        on_chain = False
+
+        if not use_rollup_mode:
+            # MODO INMEDIATO: Enviar transacción a blockchain ahora
+            blockchain = BlockchainService()
+            tx_hash = blockchain.add_reading(
+                sensor_id=reading_data.sensor_id,
+                humidity=reading_data.humidity_percentage,
+                temperature=reading_data.temperature_celsius
+            )
+            on_chain = True
+        else:
+            # MODO ROLLUP: Marcar como PENDIENTE
+            tx_hash = "PENDIENTE"
 
         # GUARDAR EN POSTGRESQL (si está disponible)
         if DB_AVAILABLE and db is not None:
@@ -121,7 +181,7 @@ async def add_reading(
                     temperature_celsius=reading_data.temperature_celsius,
                     timestamp=timestamp_now,
                     tx_hash=tx_hash,
-                    on_chain=True
+                    on_chain=on_chain
                 )
 
                 # Archivar lecturas antiguas (mantener solo las últimas 10 on-chain)
@@ -138,12 +198,21 @@ async def add_reading(
                 print(f"[WARN] No se pudo guardar en PostgreSQL: {db_error}")
                 # No lanzar error - la transacción blockchain fue exitosa
 
-        return TransactionResponse(
-            success=True,
-            tx_hash=tx_hash,
-            explorer_url=f"https://preview.cardanoscan.io/transaction/{tx_hash}",
-            message=f"Lectura agregada para sensor {reading_data.sensor_id}"
-        )
+        # Preparar respuesta según el modo
+        if use_rollup_mode:
+            return TransactionResponse(
+                success=True,
+                tx_hash="PENDIENTE",
+                explorer_url=None,
+                message=f"Lectura guardada para sensor {reading_data.sensor_id}. Será enviada a blockchain en el próximo rollup diario."
+            )
+        else:
+            return TransactionResponse(
+                success=True,
+                tx_hash=tx_hash,
+                explorer_url=f"https://preview.cardanoscan.io/transaction/{tx_hash}",
+                message=f"Lectura agregada para sensor {reading_data.sensor_id}"
+            )
 
     except Exception as e:
         raise HTTPException(

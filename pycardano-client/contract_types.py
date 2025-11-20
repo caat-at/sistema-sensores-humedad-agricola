@@ -116,6 +116,32 @@ class HumidityReading(PlutusData):
 
 
 @dataclass
+class RollupStatistics(PlutusData):
+    """Estadísticas agregadas de un rollup diario"""
+    CONSTR_ID = 0
+    humidity_min: int
+    humidity_max: int
+    humidity_avg: int
+    temperature_min: int
+    temperature_max: int
+    temperature_avg: int
+
+
+@dataclass
+class DailyRollup(PlutusData):
+    """Rollup diario de lecturas con merkle hash"""
+    CONSTR_ID = 0
+    sensor_id: bytes
+    merkle_root: bytes  # Hash raíz SHA-256 (32 bytes)
+    readings_count: int
+    date: bytes  # Fecha en formato YYYY-MM-DD
+    statistics: RollupStatistics
+    first_reading_timestamp: int
+    last_reading_timestamp: int
+    rollup_type: bytes  # "daily", "hourly", etc.
+
+
+@dataclass
 class HumiditySensorDatum(PlutusData):
     """Datum principal - Estado del sistema"""
     CONSTR_ID = 0
@@ -187,6 +213,13 @@ class EmergencyStop(PlutusData):
     reason: bytes
 
 
+@dataclass
+class AddDailyRollup(PlutusData):
+    """Agregar rollup diario con merkle hash"""
+    CONSTR_ID = 8
+    rollup: DailyRollup
+
+
 # Tipo unión para redeemers
 HumiditySensorRedeemer = Union[
     RegisterSensor,
@@ -197,6 +230,7 @@ HumiditySensorRedeemer = Union[
     UpdateAdmin,
     SetMaintenanceMode,
     EmergencyStop,
+    AddDailyRollup,
 ]
 
 
@@ -307,4 +341,59 @@ def create_humidity_reading(
         temperature_celsius=temperature,
         timestamp=timestamp,
         alert_level=calculate_alert_level(humidity)
+    )
+
+
+def create_daily_rollup(
+    sensor_id: str,
+    merkle_root: str,
+    readings_count: int,
+    date: str,
+    humidity_min: int,
+    humidity_max: int,
+    humidity_avg: int,
+    temperature_min: int,
+    temperature_max: int,
+    temperature_avg: int,
+    first_reading_timestamp: int,
+    last_reading_timestamp: int
+) -> DailyRollup:
+    """
+    Helper para crear DailyRollup desde datos del servicio de rollup
+
+    Args:
+        sensor_id: Identificador del sensor
+        merkle_root: Hash raíz SHA-256 (hex string de 64 caracteres)
+        readings_count: Cantidad de lecturas en el rollup
+        date: Fecha en formato YYYY-MM-DD
+        humidity_min: Humedad mínima del día
+        humidity_max: Humedad máxima del día
+        humidity_avg: Humedad promedio del día
+        temperature_min: Temperatura mínima del día
+        temperature_max: Temperatura máxima del día
+        temperature_avg: Temperatura promedio del día
+        first_reading_timestamp: Timestamp de la primera lectura (ms)
+        last_reading_timestamp: Timestamp de la última lectura (ms)
+
+    Returns:
+        DailyRollup configurado para blockchain
+    """
+    statistics = RollupStatistics(
+        humidity_min=humidity_min,
+        humidity_max=humidity_max,
+        humidity_avg=humidity_avg,
+        temperature_min=temperature_min,
+        temperature_max=temperature_max,
+        temperature_avg=temperature_avg
+    )
+
+    return DailyRollup(
+        sensor_id=sensor_id.encode('utf-8'),
+        merkle_root=bytes.fromhex(merkle_root),
+        readings_count=readings_count,
+        date=date.encode('utf-8'),
+        statistics=statistics,
+        first_reading_timestamp=first_reading_timestamp,
+        last_reading_timestamp=last_reading_timestamp,
+        rollup_type=b"daily"
     )

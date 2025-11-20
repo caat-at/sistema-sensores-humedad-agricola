@@ -60,6 +60,7 @@ class ReadingHistory(Base):
     timestamp = Column(TIMESTAMP, nullable=False, index=True)
     tx_hash = Column(String(64), index=True)
     on_chain = Column(Boolean, default=True, index=True)
+    rollup_batch_id = Column(String(64), index=True)  # Merkle root hash del rollup
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     __table_args__ = (

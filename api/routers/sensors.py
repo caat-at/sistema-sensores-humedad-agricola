@@ -64,12 +64,40 @@ def sensor_to_response(sensor) -> SensorResponse:
 
 
 @router.get("", response_model=List[SensorResponse])
-async def list_sensors():
+async def list_sensors(db: Optional[Session] = Depends(get_db) if DB_AVAILABLE else None):
     """
-    Lista todos los sensores registrados en el contrato
-    Deduplica sensores por sensor_id, devolviendo la versión más reciente
+    Lista todos los sensores registrados
+    Prioriza datos de PostgreSQL (más actualizados), fallback a blockchain
     """
     try:
+        # Intentar leer desde PostgreSQL primero (datos más actualizados)
+        if DB_AVAILABLE and db is not None:
+            from api.database.models import SensorHistory
+
+            db_sensors = db.query(SensorHistory).filter(
+                SensorHistory.is_current == True
+            ).all()
+
+            if db_sensors:
+                return [
+                    SensorResponse(
+                        sensor_id=s.sensor_id,
+                        location=LocationResponse(
+                            latitude=float(s.location_latitude),
+                            longitude=float(s.location_longitude),
+                            zone_name=s.location_zone_name
+                        ),
+                        min_humidity_threshold=s.min_humidity_threshold,
+                        max_humidity_threshold=s.max_humidity_threshold,
+                        reading_interval_minutes=s.reading_interval_minutes,
+                        status=s.status,
+                        owner=s.owner_pkh,
+                        installed_date=s.installed_date.isoformat()
+                    )
+                    for s in db_sensors
+                ]
+
+        # Fallback: leer desde blockchain
         blockchain = BlockchainService()
         all_sensors = blockchain.get_all_sensors()
 

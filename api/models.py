@@ -148,8 +148,8 @@ class ContractStateResponse(BaseModel):
 class TransactionResponse(BaseModel):
     """Modelo de respuesta para transacciones"""
     success: bool
-    tx_hash: str
-    explorer_url: str
+    tx_hash: Optional[str] = None
+    explorer_url: Optional[str] = None
     message: str
 
 

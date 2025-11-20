@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación Blockchain vs BD - Sistema de Sensores</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #1a202c; font-size: 28px; margin-bottom: 8px; }
+        .subtitle { color: #718096; font-size: 14px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stat-label { color: #718096; font-size: 14px; margin-bottom: 8px; }
+        .stat-value { font-size: 36px; font-weight: bold; color: #1a202c; }
+        .stat-sublabel { color: #a0aec0; font-size: 12px; margin-top: 4px; }
+        .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .section-title { font-size: 20px; font-weight: 600; color: #1a202c; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
+        .rollup-card { background: #f7fafc; border-left: 4px solid #667eea; padding: 16px; margin-bottom: 12px; border-radius: 8px; }
+        .rollup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .rollup-id { font-family: monospace; font-size: 14px; color: #4a5568; }
+        .rollup-count { background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .tx-hash { font-family: monospace; font-size: 12px; color: #718096; word-break: break-all; }
+        .reading-item { background: white; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .reading-header { font-weight: 600; color: #1a202c; margin-bottom: 4px; }
+        .reading-data { color: #718096; font-size: 14px; }
+        .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.3s; }
+        .btn:hover { background: #5568d3; }
+        .loading { text-align: center; padding: 40px; color: #718096; }
+        .error { background: #fed7d7; color: #c53030; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        .success { background: #c6f6d5; color: #2f855a; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        .back-link { display: inline-block; background: white; color: #667eea; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 24px; }
+        .back-link:hover { background: #f7fafc; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f7fafc; font-weight: 600; color: #4a5568; font-size: 14px; }
+        td { color: #718096; font-size: 14px; }
+        .mono { font-family: monospace; font-size: 12px; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge-success { background: #c6f6d5; color: #2f855a; }
+        .badge-warning { background: #fef5e7; color: #d69e2e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Volver al Dashboard</a>
+
+        <div class="header">
+            <h1>Verificación Blockchain vs Base de Datos</h1>
+            <p class="subtitle">Comparación de datos almacenados en Cardano Preview Testnet y PostgreSQL</p>
+        </div>
+
+        <div id="loading" class="loading">Cargando datos de verificación...</div>
+        <div id="error" style="display: none;"></div>
+
+        <div id="content" style="display: none;">
+            <!-- Estadísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">PostgreSQL</div>
+                    <div class="stat-value" id="db-total">-</div>
+                    <div class="stat-sublabel">Lecturas en DB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Blockchain</div>
+                    <div class="stat-value" id="bc-total">-</div>
+                    <div class="stat-sublabel">Lecturas en Cardano</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rollups</div>
+                    <div class="stat-value" id="rollup-count">-</div>
+                    <div class="stat-sublabel">Agrupaciones creadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">En Rollups</div>
+                    <div class="stat-value" id="rollup-readings">-</div>
+                    <div class="stat-sublabel">Lecturas agrupadas</div>
+                </div>
+            </div>
+
+            <!-- Comparación -->
+            <div class="section">
+                <h2 class="section-title">Comparación</h2>
+                <div id="comparison-result"></div>
+            </div>
+
+            <!-- Rollups -->
+            <div class="section">
+                <h2 class="section-title">Rollups Creados</h2>
+                <div id="rollups-list"></div>
+            </div>
+
+            <!-- Lecturas Blockchain -->
+            <div class="section">
+                <h2 class="section-title">Muestra de Lecturas en Blockchain (últimas 20)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sensor</th>
+                            <th>Humedad</th>
+                            <th>Temperatura</th>
+                            <th>Timestamp</th>
+                            <th>Nivel Alerta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blockchain-readings"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadVerificationData() {
+            try {
+                const response = await fetch('/api/verification/blockchain-vs-db');
+                const data = await response.json();
+
+                // Actualizar estadísticas
+                document.getElementById('db-total').textContent = data.database.total_readings;
+                document.getElementById('bc-total').textContent = data.blockchain.total_readings;
+                document.getElementById('rollup-count').textContent = data.database.rollup_count;
+                document.getElementById('rollup-readings').textContent = data.database.readings_in_rollups;
+
+                // Mostrar comparación
+                const comparisonDiv = document.getElementById('comparison-result');
+                if (data.comparison.matches) {
+                    comparisonDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✓ Verificación exitosa!</strong><br>
+                            La cantidad de lecturas coincide entre PostgreSQL y Blockchain.
+                        </div>
+                    `;
+                } else {
+                    const diff = data.comparison.difference;
+                    comparisonDiv.innerHTML = `
+                        <div class="${diff > 0 ? 'success' : 'error'}">
+                            <strong>${diff > 0 ? '⚠' : '✗'} Diferencia detectada</strong><br>
+                            Blockchain tiene ${Math.abs(diff)} lecturas ${diff > 0 ? 'más' : 'menos'} que PostgreSQL.<br>
+                            <small>Esto es normal si PostgreSQL archiva lecturas antiguas mientras Blockchain las mantiene permanentemente.</small>
+                        </div>
+                    `;
+                }
+
+                // Mostrar rollups
+                const rollupsDiv = document.getElementById('rollups-list');
+                if (data.database.rollups.length === 0) {
+                    rollupsDiv.innerHTML = '<p style="color:#a0aec0;">No hay rollups creados todavía.</p>';
+                } else {
+                    rollupsDiv.innerHTML = data.database.rollups.map(rollup => `
+                        <div class="rollup-card">
+                            <div class="rollup-header">
+                                <div class="rollup-id">Batch ID: ${rollup.batch_id.substring(0, 32)}...</div>
+                                <span class="rollup-count">${rollup.readings_count} lecturas</span>
+                            </div>
+                            <div class="tx-hash">TX Hash: ${rollup.tx_hash}</div>
+                            <div style="margin-top:12px;">
+                                ${rollup.readings.map(r => `
+                                    <div class="reading-item">
+                                        <div class="reading-header">${r.sensor_id}</div>
+                                        <div class="reading-data">
+                                            ${r.humidity}% humedad, ${r.temperature}°C - ${new Date(r.timestamp).toLocaleString()}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Mostrar lecturas de blockchain
+                const bcTable = document.getElementById('blockchain-readings');
+                if (data.blockchain.sample_readings.length === 0) {
+                    bcTable.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0;">No se pudieron obtener lecturas de blockchain</td></tr>';
+                } else {
+                    bcTable.innerHTML = data.blockchain.sample_readings.map(r => `
+                        <tr>
+                            <td><strong>${r.sensor_id}</strong></td>
+                            <td>${r.humidity}%</td>
+                            <td>${r.temperature}°C</td>
+                            <td class="mono">${new Date(r.timestamp).toLocaleString()}</td>
+                            <td><span class="badge badge-${r.alert_level === 'Normal' ? 'success' : 'warning'}">${r.alert_level}</span></td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Mostrar contenido y ocultar loading
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').className = 'error';
+                document.getElementById('error').textContent = `Error al cargar datos: ${error.message}`;
+            }
+        }
+
+        // Cargar datos al iniciar
+        loadVerificationData();
+
+        // Actualizar cada 30 segundos
+        setInterval(loadVerificationData, 30000);
+    </script>
+</body>
+</html>

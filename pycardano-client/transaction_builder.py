@@ -399,3 +399,118 @@ class SensorTransactionBuilder:
         print(f"    Explorer: https://preview.cardanoscan.io/transaction/{tx_hash}")
 
         return tx_hash
+
+    def build_add_multiple_readings_tx(
+        self,
+        readings,
+        collateral_utxo=None
+    ):
+        """
+        Construir y enviar transacción para agregar múltiples lecturas (ROLLUP)
+
+        Args:
+            readings: Lista de lecturas a agregar
+            collateral_utxo: UTxO para colateral (opcional)
+
+        Returns:
+            Transaction hash (hex string)
+        """
+        print('\n' + '='*70)
+        print(f' CONSTRUYENDO TRANSACCION: AddMultipleReadings ({len(readings)} lecturas)')
+        print('='*70)
+
+        if not readings:
+            raise ValueError('La lista de lecturas no puede estar vacía')
+
+        # 1. Obtener UTxO con datum actual
+        datum_utxo = self.get_datum_utxo()
+        if not datum_utxo:
+            raise ValueError('No se encontró UTxO con datum.')
+
+        # 2. Decodificar datum actual
+        current_datum = self.decode_datum(datum_utxo)
+
+        # 3. Agregar todas las lecturas
+        MAX_READINGS_PER_SENSOR = 10
+        new_readings = list(current_datum.recent_readings) + readings
+
+        # Filtrar: mantener solo últimas 10 lecturas por sensor
+        if len(new_readings) > MAX_READINGS_PER_SENSOR * current_datum.total_sensors:
+            new_readings = new_readings[-MAX_READINGS_PER_SENSOR * current_datum.total_sensors:]
+
+        new_datum = HumiditySensorDatum(
+            sensors=current_datum.sensors,
+            recent_readings=new_readings,
+            admin=current_datum.admin,
+            last_updated=int(time.time() * 1000),
+            total_sensors=current_datum.total_sensors
+        )
+
+        # 4. Crear redeemer con AddMultipleReadings
+        redeemer_data = AddMultipleReadings(readings=readings)
+        redeemer = Redeemer(redeemer_data)
+
+        # 5. Construir transacción
+        builder = TransactionBuilder(self.context)
+
+        builder.add_script_input(
+            utxo=datum_utxo,
+            script=self.script,
+            redeemer=redeemer
+        )
+
+        # El nuevo datum será más grande con múltiples lecturas, agregar más ADA
+        from pycardano import Value
+        extra_ada = 500_000 + (len(readings) * 100_000)  # +0.5 ADA base + 0.1 ADA por lectura
+        output_value = Value(datum_utxo.output.amount.coin + extra_ada)
+
+        builder.add_output(
+            TransactionOutput(
+                address=self.script_address,
+                amount=output_value,
+                datum=new_datum
+            )
+        )
+
+        # Agregar inputs de la wallet para fees
+        print('[+] Obteniendo UTxOs de la wallet para fees...')
+        wallet_utxos = self.context.utxos(self.payment_address)
+        if not wallet_utxos:
+            raise ValueError('No hay UTxOs en la wallet para pagar fees. Necesitas fondos en tu wallet.')
+
+        print(f'    Encontrados {len(wallet_utxos)} UTxOs en wallet')
+
+        # Agregar UTxOs de la wallet como inputs adicionales
+        for utxo in wallet_utxos:
+            builder.add_input(utxo)
+
+        # Configurar collateral
+        if collateral_utxo:
+            builder.collaterals = [collateral_utxo]
+        else:
+            # Seleccionar un UTxO de la wallet como collateral
+            for utxo in wallet_utxos:
+                if utxo.output.amount.coin >= 5_000_000:  # >= 5 ADA
+                    builder.collaterals = [utxo]
+                    break
+
+        builder.required_signers = [self.payment_vkey.hash()]
+
+        # 6. Construir y firmar
+        print('\n[+] Construyendo transacción...')
+        signed_tx = builder.build_and_sign(
+            signing_keys=[self.payment_skey],
+            change_address=self.payment_address
+        )
+
+        # 7. Enviar
+        print('[+] Enviando transacción...')
+        tx_hash = self.context.submit_tx(signed_tx.to_cbor())
+
+        print(f'\n[OK] Transacción de rollup enviada!')
+        print(f'    TxHash: {tx_hash}')
+        print(f'    Lecturas: {len(readings)}')
+        print(f'    Explorer: https://preview.cardanoscan.io/transaction/{tx_hash}')
+
+        return tx_hash
+

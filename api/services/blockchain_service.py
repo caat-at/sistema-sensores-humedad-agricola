@@ -192,3 +192,46 @@ class BlockchainService:
                     sensors_dict[sensor_id] = sensor
 
         return sensors_dict
+
+    def submit_rollup(self, rollup_datum: dict) -> str:
+        """
+        Envía un rollup (múltiples lecturas) a blockchain usando AddMultipleReadings
+
+        Args:
+            rollup_datum: Diccionario con datos del rollup incluyendo:
+                - sensor_id: ID del sensor
+                - merkle_root: Root del merkle tree
+                - readings_count: Número de lecturas
+                - statistics: Estadísticas agregadas
+                - Información de las lecturas individuales (si están disponibles)
+
+        Returns:
+            Transaction hash (hex string)
+        """
+        # Extraer las lecturas del rollup
+        # El rollup_datum debería contener una lista de lecturas individuales
+        # Por ahora, vamos a crear una lectura resumen basada en las estadísticas
+
+        # Crear una lectura con los promedios del rollup
+        timestamp_now = int(datetime.now().timestamp() * 1000)
+
+        # Crear lectura resumen del rollup
+        rollup_reading = create_humidity_reading(
+            sensor_id=rollup_datum["sensor_id"],
+            humidity=int(rollup_datum["statistics"]["humidity_avg"]),
+            temperature=int(rollup_datum["statistics"]["temperature_avg"]),
+            timestamp=timestamp_now
+        )
+
+        # Por ahora, enviar una sola lectura resumen
+        # En una implementación completa, podrías enviar todas las lecturas individuales
+        readings = [rollup_reading]
+
+        print(f"\n[ROLLUP] Enviando rollup para {rollup_datum['sensor_id']}")
+        print(f"    Lecturas agregadas: {rollup_datum['readings_count']}")
+        print(f"    Merkle Root: {rollup_datum['merkle_root'][:16]}...")
+        print(f"    Humedad promedio: {rollup_datum['statistics']['humidity_avg']}%")
+        print(f"    Temperatura promedio: {rollup_datum['statistics']['temperature_avg']}°C")
+
+        tx_hash = self.builder.build_add_multiple_readings_tx(readings)
+        return tx_hash

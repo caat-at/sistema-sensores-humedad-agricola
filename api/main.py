@@ -17,7 +17,18 @@ from pathlib import Path
 pycardano_path = Path(__file__).parent.parent / "pycardano-client"
 sys.path.insert(0, str(pycardano_path))
 
-from api.routers import sensors, readings, stats
+from api.routers import sensors, readings, stats, audit, blockchain, verification
+try:
+    from api.routers import alerts
+    ALERTS_AVAILABLE = True
+except ImportError:
+    ALERTS_AVAILABLE = False
+
+try:
+    from api.routers import rollups
+    ROLLUPS_AVAILABLE = True
+except ImportError:
+    ROLLUPS_AVAILABLE = False
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -67,6 +78,13 @@ app.add_middleware(
 app.include_router(sensors.router)
 app.include_router(readings.router)
 app.include_router(stats.router)
+app.include_router(audit.router)
+app.include_router(blockchain.router)
+app.include_router(verification.router)
+if ALERTS_AVAILABLE:
+    app.include_router(alerts.router)
+if ROLLUPS_AVAILABLE:
+    app.include_router(rollups.router)
 
 # Servir dashboard estático
 frontend_path = Path(__file__).parent.parent / "frontend" / "dashboard"
@@ -93,11 +111,51 @@ async def health_check():
 
     Verifica que la API esté funcionando correctamente
     """
+    # Obtener estado del scheduler si está disponible
+    scheduler_status = {}
+    if ROLLUPS_AVAILABLE:
+        try:
+            from api.scheduler import get_scheduler_status
+            scheduler_status = get_scheduler_status()
+        except:
+            scheduler_status = {"running": False, "error": "Scheduler not initialized"}
+
     return {
         "status": "healthy",
         "version": "1.0.0",
-        "blockchain": "Cardano Preview Testnet"
+        "blockchain": "Cardano Preview Testnet",
+        "scheduler": scheduler_status
     }
+
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Evento que se ejecuta al iniciar la aplicación
+    Inicia el scheduler de rollups diarios
+    """
+    if ROLLUPS_AVAILABLE:
+        try:
+            from api.scheduler import start_scheduler
+            start_scheduler()
+            print("[OK] Scheduler de rollups iniciado correctamente")
+        except Exception as e:
+            print(f"[WARN] No se pudo iniciar el scheduler: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Evento que se ejecuta al detener la aplicación
+    Detiene el scheduler gracefully
+    """
+    if ROLLUPS_AVAILABLE:
+        try:
+            from api.scheduler import stop_scheduler
+            stop_scheduler()
+            print("[OK] Scheduler detenido correctamente")
+        except Exception as e:
+            print(f"[WARN] Error deteniendo scheduler: {e}")
 
 
 # Manejo de errores global

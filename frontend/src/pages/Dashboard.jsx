@@ -76,8 +76,8 @@ function Dashboard() {
             <ThermometerSun size={24} />
             <h3 style={{ margin: 0 }}>Temperatura Promedio</h3>
           </div>
-          <div className="stat-value">{stats?.temperature_stats?.avg?.toFixed(1) || 0}°</div>
-          <div className="stat-label">Rango: {stats?.temperature_stats?.min}° - {stats?.temperature_stats?.max}°</div>
+          <div className="stat-value">{stats?.temperature_stats?.avg?.toFixed(1) || 0}ï¿½</div>
+          <div className="stat-label">Rango: {stats?.temperature_stats?.min}ï¿½ - {stats?.temperature_stats?.max}ï¿½</div>
         </div>
 
         <div className="stat-card">
@@ -93,7 +93,7 @@ function Dashboard() {
       {/* Charts */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', marginTop: '30px' }}>
         <div className="card">
-          <h2>Humedad y Temperatura (Últimas 10 lecturas)</h2>
+          <h2>Humedad y Temperatura (ï¿½ltimas 10 lecturas)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -102,13 +102,13 @@ function Dashboard() {
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="humedad" stroke="#667eea" strokeWidth={2} name="Humedad %" />
-              <Line type="monotone" dataKey="temperatura" stroke="#764ba2" strokeWidth={2} name="Temperatura °C" />
+              <Line type="monotone" dataKey="temperatura" stroke="#764ba2" strokeWidth={2} name="Temperatura ï¿½C" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         <div className="card">
-          <h2>Distribución de Niveles de Alerta</h2>
+          <h2>Distribuciï¿½n de Niveles de Alerta</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={alertData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -133,6 +133,7 @@ function Dashboard() {
                 <th style={{ padding: '12px', textAlign: 'left' }}>Temperatura</th>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Nivel Alerta</th>
                 <th style={{ padding: '12px', textAlign: 'left' }}>Fecha/Hora</th>
+                <th style={{ padding: '12px', textAlign: 'left' }}>TX Hash</th>
               </tr>
             </thead>
             <tbody>
@@ -140,7 +141,7 @@ function Dashboard() {
                 <tr key={idx}>
                   <td style={{ padding: '12px' }}>{reading.sensor_id}</td>
                   <td style={{ padding: '12px' }}>{reading.humidity_percentage}%</td>
-                  <td style={{ padding: '12px' }}>{reading.temperature_celsius}°C</td>
+                  <td style={{ padding: '12px' }}>{reading.temperature_celsius}ï¿½C</td>
                   <td style={{ padding: '12px' }}>
                     <span className={`badge badge-${
                       reading.alert_level === 'Critical' ? 'danger' :
@@ -152,6 +153,26 @@ function Dashboard() {
                   </td>
                   <td style={{ padding: '12px' }}>
                     {new Date(reading.timestamp).toLocaleString('es-ES')}
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    {reading.tx_hash ? (
+                      <a
+                        href={`https://preview.cardanoscan.io/transaction/${reading.tx_hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: '#667eea',
+                          textDecoration: 'none',
+                          fontFamily: 'monospace',
+                          fontSize: '0.85em'
+                        }}
+                        title={reading.tx_hash}
+                      >
+                        {reading.tx_hash.substring(0, 8)}...{reading.tx_hash.substring(reading.tx_hash.length - 8)}
+                      </a>
+                    ) : (
+                      <span style={{ color: '#999', fontSize: '0.85em' }}>-</span>
+                    )}
                   </td>
                 </tr>
               ))}
