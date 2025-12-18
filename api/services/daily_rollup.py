@@ -8,8 +8,10 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from api.database.models import ReadingHistory, SensorHistory
+from api.database.models import ReadingHistory, SensorHistory, RollupError
 from api.services.merkle_tree import MerkleTree, create_rollup_merkle
+import traceback
+import json
 # from api.blockchain.client import BlockchainClient  # TODO: Implementar cliente blockchain
 
 
@@ -28,6 +30,52 @@ class DailyRollupService:
         """
         self.db = db
         self.blockchain_client = blockchain_client
+
+    def log_rollup_error(
+        self,
+        sensor_id: str,
+        error_type: str,
+        error_message: str,
+        execution_date: datetime,
+        readings_count: Optional[int] = None,
+        rollup_batch_id: Optional[str] = None,
+        tx_hash: Optional[str] = None,
+        error_details: Optional[dict] = None
+    ) -> RollupError:
+        """
+        Registra un error de rollup en la base de datos
+
+        Args:
+            sensor_id: ID del sensor
+            error_type: Tipo de error (blockchain_error, validation_error, network_error, etc.)
+            error_message: Mensaje de error
+            execution_date: Fecha de ejecución del rollup
+            readings_count: Número de lecturas que se intentó procesar
+            rollup_batch_id: ID del batch si se creó
+            tx_hash: Hash de transacción si se creó
+            error_details: Detalles adicionales del error
+
+        Returns:
+            RollupError: Registro del error creado
+        """
+        error = RollupError(
+            sensor_id=sensor_id,
+            execution_date=execution_date,
+            error_type=error_type,
+            error_message=error_message,
+            error_details=error_details,
+            readings_count=readings_count,
+            rollup_batch_id=rollup_batch_id,
+            tx_hash=tx_hash,
+            retry_count=0,
+            resolved=False
+        )
+
+        self.db.add(error)
+        self.db.commit()
+        self.db.refresh(error)
+
+        return error
 
     def get_pending_readings(self, sensor_id: str, date: datetime) -> List[Dict]:
         """
@@ -139,31 +187,38 @@ class DailyRollupService:
             return f"simulated_tx_{rollup_data['merkle_root'][:16]}"
 
         try:
-            # Preparar datum para blockchain
-            datum = {
-                "sensor_id": rollup_data["sensor_id"],
-                "merkle_root": rollup_data["merkle_root"],
-                "readings_count": rollup_data["readings_count"],
-                "date": rollup_data["date"],
-                "humidity_min": int(rollup_data["statistics"]["humidity_min"]),
-                "humidity_max": int(rollup_data["statistics"]["humidity_max"]),
-                "humidity_avg": int(rollup_data["statistics"]["humidity_avg"]),
-                "temperature_min": int(rollup_data["statistics"]["temperature_min"]),
-                "temperature_max": int(rollup_data["statistics"]["temperature_max"]),
-                "temperature_avg": int(rollup_data["statistics"]["temperature_avg"]),
-                "first_reading": rollup_data["first_reading"],
-                "last_reading": rollup_data["last_reading"],
-                "rollup_type": "daily"
-            }
-
-            # Enviar a blockchain
-            tx_hash = self.blockchain_client.submit_rollup(datum)
+            # Enviar a blockchain (submit_rollup espera el rollup_data completo)
+            tx_hash = self.blockchain_client.submit_rollup(rollup_data)
             print(f"[OK] Rollup enviado a blockchain: {tx_hash}")
 
             return tx_hash
 
         except Exception as e:
-            print(f"[ERROR] Error enviando rollup a blockchain: {e}")
+            error_msg = str(e)
+            print(f"[ERROR] Error enviando rollup a blockchain: {error_msg}")
+
+            # Registrar el error en la base de datos
+            try:
+                error_details = {
+                    "traceback": traceback.format_exc(),
+                    "rollup_stats": rollup_data.get("statistics", {}),
+                    "exception_type": type(e).__name__
+                }
+
+                self.log_rollup_error(
+                    sensor_id=rollup_data.get("sensor_id", "UNKNOWN"),
+                    error_type="blockchain_error",
+                    error_message=error_msg,
+                    execution_date=datetime.now(),
+                    readings_count=rollup_data.get("readings_count", 0),
+                    rollup_batch_id=rollup_data.get("merkle_root"),
+                    tx_hash=None,
+                    error_details=error_details
+                )
+                print(f"[OK] Error registrado en base de datos")
+            except Exception as log_error:
+                print(f"[WARN] No se pudo registrar el error: {log_error}")
+
             return None
 
     def mark_readings_as_rolled_up(self, reading_ids: List[int], batch_id: str, tx_hash: Optional[str]):

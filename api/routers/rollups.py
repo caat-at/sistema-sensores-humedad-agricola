@@ -46,13 +46,13 @@ class RollupVerifyRequest(BaseModel):
 class RollupVerifyResponse(BaseModel):
     """Response de verificación de lectura"""
     valid: bool
-    reading_id: int
-    rollup_batch_id: Optional[str]
-    merkle_root: Optional[str]
-    tx_hash: Optional[str]
-    proof: Optional[List[tuple]]
-    leaf_hash: Optional[str]
-    error: Optional[str]
+    reading_id: Optional[int] = None
+    rollup_batch_id: Optional[str] = None
+    merkle_root: Optional[str] = None
+    tx_hash: Optional[str] = None
+    proof: Optional[List[tuple]] = None
+    leaf_hash: Optional[str] = None
+    error: Optional[str] = None
 
 
 class RollupStatsResponse(BaseModel):
@@ -65,9 +65,117 @@ class RollupStatsResponse(BaseModel):
     estimated_savings_ada: float
 
 
+class RollupErrorResponse(BaseModel):
+    """Response de un error de rollup"""
+    id: int
+    sensor_id: str
+    execution_date: str
+    error_type: str
+    error_message: str
+    error_details: Optional[dict] = None
+    readings_count: Optional[int] = None
+    rollup_batch_id: Optional[str] = None
+    tx_hash: Optional[str] = None
+    retry_count: int
+    resolved: bool
+    resolved_at: Optional[str] = None
+    created_at: str
+
+
+class RollupErrorsListResponse(BaseModel):
+    """Lista de errores de rollup"""
+    total_errors: int
+    unresolved_errors: int
+    errors: List[RollupErrorResponse]
+
+
 # ========================================
 # ENDPOINTS
 # ========================================
+
+@router.get("/errors", response_model=RollupErrorsListResponse)
+async def get_rollup_errors(
+    sensor_id: Optional[str] = Query(None, description="Filtrar por sensor"),
+    resolved: Optional[bool] = Query(None, description="Filtrar por estado resuelto/no resuelto"),
+    limit: int = Query(50, ge=1, le=200, description="Límite de resultados"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtiene el historial de errores de rollups
+
+    - **sensor_id**: Opcional - Filtrar por sensor específico
+    - **resolved**: Opcional - Filtrar por estado (true/false)
+    - **limit**: Límite de resultados (máx 200, default 50)
+
+    **Ejemplo de uso:**
+    ```bash
+    # Todos los errores no resueltos
+    curl "http://localhost:8000/api/rollup/errors?resolved=false"
+
+    # Errores de un sensor específico
+    curl "http://localhost:8000/api/rollup/errors?sensor_id=SENSOR_001"
+    ```
+    """
+    try:
+        from api.database.models import RollupError
+
+        # Construir query base
+        query = db.query(RollupError)
+
+        # Filtrar por sensor si se especifica
+        if sensor_id:
+            query = query.filter(RollupError.sensor_id == sensor_id)
+
+        # Filtrar por estado de resolución si se especifica
+        if resolved is not None:
+            query = query.filter(RollupError.resolved == resolved)
+
+        # Contar totales antes de aplicar límite
+        total_errors = query.count()
+        unresolved_errors = db.query(RollupError).filter(
+            RollupError.resolved == False
+        ).count()
+
+        # Ordenar por fecha de ejecución descendente (más reciente primero)
+        query = query.order_by(RollupError.execution_date.desc())
+
+        # Aplicar límite
+        query = query.limit(limit)
+
+        # Ejecutar query
+        errors = query.all()
+
+        # Convertir a response models
+        error_responses = []
+        for error in errors:
+            error_responses.append(RollupErrorResponse(
+                id=error.id,
+                sensor_id=error.sensor_id,
+                execution_date=error.execution_date.isoformat(),
+                error_type=error.error_type,
+                error_message=error.error_message,
+                error_details=error.error_details,
+                readings_count=error.readings_count,
+                rollup_batch_id=error.rollup_batch_id,
+                tx_hash=error.tx_hash,
+                retry_count=error.retry_count,
+                resolved=error.resolved,
+                resolved_at=error.resolved_at.isoformat() if error.resolved_at else None,
+                created_at=error.created_at.isoformat()
+            ))
+
+        return RollupErrorsListResponse(
+            total_errors=total_errors,
+            unresolved_errors=unresolved_errors,
+            errors=error_responses
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error obteniendo errores de rollup: {str(e)}"
+        )
+
 
 @router.post("/daily", response_model=RollupProcessResponse)
 async def process_daily_rollup(

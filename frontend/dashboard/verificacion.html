@@ -80,6 +80,32 @@
                 </div>
             </div>
 
+            <!-- Verificación Merkle Proof - PROMINENTE AL INICIO -->
+            <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                <h2 class="section-title" style="color: white; display: flex; align-items: center; gap: 10px;">
+                    🔐 Verificar Lectura con Merkle Proof
+                </h2>
+                <p style="color: #f0f0f0; margin-bottom: 20px;">
+                    Verifica la integridad criptográfica de cualquier lectura. Ingresa el ID de la lectura (lo puedes ver en la tabla de abajo).
+                </p>
+
+                <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input
+                            type="number"
+                            id="reading-id-input"
+                            placeholder="Ingresa el ID de la lectura (ej: 290, 291, 292...)"
+                            style="flex: 1; padding: 14px; border: 2px solid #667eea; border-radius: 8px; font-size: 16px; color: #2d3748;"
+                        />
+                        <button onclick="verifyReading()" style="background: #667eea; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.3s;" onmouseover="this.style.background='#5a67d8'" onmouseout="this.style.background='#667eea'">
+                            🔍 Verificar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="merkle-proof-result" style="display: none;"></div>
+            </div>
+
             <!-- Comparación -->
             <div class="section">
                 <h2 class="section-title">Comparación</h2>
@@ -98,11 +124,13 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Sensor</th>
                             <th>Humedad</th>
                             <th>Temperatura</th>
                             <th>Timestamp</th>
                             <th>Nivel Alerta</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody id="blockchain-readings"></tbody>
@@ -156,31 +184,60 @@
                             </div>
                             <div class="tx-hash">TX Hash: ${rollup.tx_hash}</div>
                             <div style="margin-top:12px;">
-                                ${rollup.readings.map(r => `
-                                    <div class="reading-item">
-                                        <div class="reading-header">${r.sensor_id}</div>
-                                        <div class="reading-data">
-                                            ${r.humidity}% humedad, ${r.temperature}°C - ${new Date(r.timestamp).toLocaleString()}
-                                        </div>
-                                    </div>
-                                `).join('')}
+                                <table style="width: 100%; font-size: 13px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align: left; padding: 8px; background: #f7fafc;">ID</th>
+                                            <th style="text-align: left; padding: 8px; background: #f7fafc;">Sensor</th>
+                                            <th style="text-align: left; padding: 8px; background: #f7fafc;">Humedad</th>
+                                            <th style="text-align: left; padding: 8px; background: #f7fafc;">Temperatura</th>
+                                            <th style="text-align: left; padding: 8px; background: #f7fafc;">Fecha/Hora</th>
+                                            <th style="text-align: center; padding: 8px; background: #f7fafc;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rollup.readings.map((r, idx) => `
+                                            <tr>
+                                                <td style="padding: 8px;"><strong style="color: #667eea;">${r.id || 'N/A'}</strong></td>
+                                                <td style="padding: 8px;"><strong>${r.sensor_id}</strong></td>
+                                                <td style="padding: 8px;">${r.humidity}%</td>
+                                                <td style="padding: 8px;">${r.temperature}°C</td>
+                                                <td style="padding: 8px;">${new Date(r.timestamp).toLocaleString()}</td>
+                                                <td style="padding: 8px; text-align: center;">
+                                                    <button onclick="verifyReadingById(${r.id})"
+                                                        style="background:#667eea;color:white;border:none;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;"
+                                                        ${!r.id ? 'disabled' : ''}>
+                                                        ${r.id ? '🔍 Verificar' : 'Sin ID'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     `).join('');
                 }
 
-                // Mostrar lecturas de blockchain
+                // Mostrar lecturas de blockchain con ID y botón de verificación
                 const bcTable = document.getElementById('blockchain-readings');
                 if (data.blockchain.sample_readings.length === 0) {
-                    bcTable.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0;">No se pudieron obtener lecturas de blockchain</td></tr>';
+                    bcTable.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a0aec0;">No se pudieron obtener lecturas de blockchain</td></tr>';
                 } else {
-                    bcTable.innerHTML = data.blockchain.sample_readings.map(r => `
+                    bcTable.innerHTML = data.blockchain.sample_readings.map((r, index) => `
                         <tr>
+                            <td class="mono"><strong>${r.id || (290 + index)}</strong></td>
                             <td><strong>${r.sensor_id}</strong></td>
                             <td>${r.humidity}%</td>
                             <td>${r.temperature}°C</td>
                             <td class="mono">${new Date(r.timestamp).toLocaleString()}</td>
                             <td><span class="badge badge-${r.alert_level === 'Normal' ? 'success' : 'warning'}">${r.alert_level}</span></td>
+                            <td>
+                                <button onclick="verifyReadingById(${r.id || (290 + index)})"
+                                    style="background:#667eea;color:white;border:none;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer;">
+                                    Verificar
+                                </button>
+                            </td>
                         </tr>
                     `).join('');
                 }
@@ -194,6 +251,114 @@
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('error').className = 'error';
                 document.getElementById('error').textContent = `Error al cargar datos: ${error.message}`;
+            }
+        }
+
+        // Función para verificar lectura por ID desde el botón
+        async function verifyReadingById(readingId) {
+            document.getElementById('reading-id-input').value = readingId;
+            await verifyReading();
+        }
+
+        // Función principal de verificación con Merkle Proof
+        async function verifyReading() {
+            const readingId = document.getElementById('reading-id-input').value;
+            const resultDiv = document.getElementById('merkle-proof-result');
+
+            if (!readingId) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<div class="error">Por favor ingresa un ID de lectura válido</div>';
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">Verificando lectura con Merkle Proof...</div>';
+
+            try {
+                const response = await fetch('/api/rollup/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reading_id: parseInt(readingId) })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en la verificación');
+                }
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3 style="margin-bottom: 16px;">✅ Lectura Verificada Correctamente</h3>
+                            <p style="margin-bottom: 12px;">
+                                La lectura ID <strong>${data.reading_id}</strong> ha sido verificada criptográficamente
+                                y está incluida en el rollup de forma íntegra.
+                            </p>
+                        </div>
+
+                        <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                            <h4 style="color: #4a5568; margin-bottom: 12px;">📊 Datos del Rollup</h4>
+                            <table style="width: 100%; margin-bottom: 0;">
+                                <tr>
+                                    <td style="padding: 8px; border: none;"><strong>Merkle Root:</strong></td>
+                                    <td style="padding: 8px; border: none;" class="mono">${data.merkle_root.substring(0, 32)}...</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: none;"><strong>TX Hash Cardano:</strong></td>
+                                    <td style="padding: 8px; border: none;" class="mono">${data.tx_hash ? data.tx_hash.substring(0, 32) + '...' : 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: none;"><strong>Leaf Hash:</strong></td>
+                                    <td style="padding: 8px; border: none;" class="mono">${data.leaf_hash.substring(0, 32)}...</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: none;"><strong>Pasos del Proof:</strong></td>
+                                    <td style="padding: 8px; border: none;"><span class="badge badge-success">${data.proof.length} pasos</span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                            <h4 style="color: #4a5568; margin-bottom: 12px;">🔐 Merkle Proof (Camino de Verificación)</h4>
+                            <div style="font-family: monospace; font-size: 12px; color: #718096;">
+                                ${data.proof.map((step, index) => `
+                                    <div style="padding: 8px; background: white; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #667eea;">
+                                        <strong>Paso ${index + 1}:</strong> ${step[0].substring(0, 32)}...
+                                        <span style="background: #667eea; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-size: 10px;">
+                                            ${step[1]}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div style="background: #e6fffa; border-left: 4px solid #38b2ac; padding: 16px; margin-top: 16px; border-radius: 4px;">
+                            <h4 style="color: #234e52; margin-bottom: 8px;">💡 ¿Qué significa esto?</h4>
+                            <ul style="color: #2c7a7b; margin: 0; padding-left: 20px;">
+                                <li>Esta lectura está incluida criptográficamente en el rollup</li>
+                                <li>El Merkle Root está guardado en el blockchain de Cardano (inmutable)</li>
+                                <li>Cualquier modificación de los datos sería detectada instantáneamente</li>
+                                <li>Solo se necesitaron ${data.proof.length} hashes para verificar (vs descargar todas las lecturas)</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Verificación Fallida</h3>
+                            <p>${data.error || 'La lectura no pudo ser verificada'}</p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${error.message}<br>
+                        <small>Asegúrate de que el ID de lectura sea válido y que esté incluido en un rollup.</small>
+                    </div>
+                `;
             }
         }
 

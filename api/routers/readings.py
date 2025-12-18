@@ -52,17 +52,17 @@ def reading_to_response(reading) -> ReadingResponse:
     )
 
 
-@router.get("", response_model=List[ReadingResponse])
+@router.get("", response_model=List[ReadingResponse], response_model_exclude_none=False)
 async def list_readings(
     sensor_id: Optional[str] = Query(None, description="Filtrar por ID de sensor"),
-    limit: Optional[int] = Query(None, ge=1, le=100, description="Límite de resultados"),
+    limit: Optional[int] = Query(None, ge=1, le=10000, description="Límite de resultados"),
     db: Optional[Session] = Depends(get_db) if DB_AVAILABLE else None
 ):
     """
     Lista todas las lecturas recientes
 
     - **sensor_id**: Opcional - Filtrar por sensor específico
-    - **limit**: Opcional - Limitar cantidad de resultados (máx 100)
+    - **limit**: Opcional - Limitar cantidad de resultados (máx 10000)
     """
     try:
         # Si PostgreSQL está disponible, consultar desde ahí (incluye tx_hash)
@@ -98,6 +98,7 @@ async def list_readings(
 
             return [
                 ReadingResponse(
+                    id=r.id,
                     sensor_id=r.sensor_id,
                     humidity_percentage=r.humidity_percentage,
                     temperature_celsius=r.temperature_celsius,

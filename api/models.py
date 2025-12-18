@@ -114,12 +114,16 @@ class SensorResponse(BaseModel):
 
 class ReadingResponse(BaseModel):
     """Modelo de respuesta para lectura"""
+    id: Optional[int] = None  # ID de la lectura en la base de datos
     sensor_id: str
     humidity_percentage: int
     temperature_celsius: int
     timestamp: str
     alert_level: str
     tx_hash: Optional[str] = None  # TxHash de la transacción que creó la lectura
+
+    class Config:
+        from_attributes = True
 
 
 class StatsResponse(BaseModel):

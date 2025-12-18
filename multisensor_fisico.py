@@ -12,7 +12,7 @@ import threading
 
 # Configuracion
 API_URL = "http://localhost:8000/api"
-INTERVALO_LECTURA = 3600  # segundos (1 hora)
+INTERVALO_LECTURA = 300  # segundos (5 minutos)
 
 # Configuracion de Sensores
 SENSORES = [
@@ -139,6 +139,13 @@ def monitorear_sensor(config, estadisticas):
             if exito:
                 estadisticas[sensor_id]['exitosas'] += 1
 
+                # Actualizar estadísticas detalladas
+                estadisticas[sensor_id]['ultima_lectura'] = timestamp
+                estadisticas[sensor_id]['ultima_humedad'] = humedad
+                estadisticas[sensor_id]['ultima_temperatura'] = temperatura
+                estadisticas[sensor_id]['humedad_promedio'].append(humedad)
+                estadisticas[sensor_id]['temperatura_promedio'].append(temperatura)
+
                 # Mostrar mensaje del servidor
                 mensaje = resultado.get('message', 'Lectura guardada')
                 print(f"  [{nombre}] [OK] {mensaje}")
@@ -179,7 +186,12 @@ def ciclo_multisensor():
     for sensor in SENSORES:
         estadisticas[sensor['sensor_id']] = {
             'exitosas': 0,
-            'fallidas': 0
+            'fallidas': 0,
+            'ultima_lectura': None,
+            'ultima_humedad': None,
+            'ultima_temperatura': None,
+            'humedad_promedio': [],
+            'temperatura_promedio': []
         }
 
     # Crear un thread por cada sensor
@@ -196,17 +208,38 @@ def ciclo_multisensor():
     try:
         # Mantener el programa principal corriendo
         while True:
-            time.sleep(10)
+            time.sleep(150)
 
-            # Mostrar estadisticas cada 10 segundos
+            # Mostrar estadisticas cada 150 segundos (2.5 minutos)
             print("\n" + "=" * 80)
             print("  ESTADISTICAS GENERALES")
             print("=" * 80)
+
+            hora_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"  Hora actual: {hora_actual}")
+            print("  " + "-" * 76)
+
             for sensor_id, stats in estadisticas.items():
                 total = stats['exitosas'] + stats['fallidas']
                 tasa = (stats['exitosas'] / total * 100) if total > 0 else 0
-                print(f"  {sensor_id}: {stats['exitosas']} exitosas | {stats['fallidas']} fallidas | {tasa:.1f}% exito")
-            print("=" * 80)
+
+                print(f"\n  {sensor_id}:")
+                print(f"    Lecturas: {stats['exitosas']} exitosas | {stats['fallidas']} fallidas | {tasa:.1f}% éxito")
+
+                if stats['ultima_lectura']:
+                    print(f"    Última lectura: {stats['ultima_lectura']}")
+                    print(f"    Última humedad: {stats['ultima_humedad']}%")
+                    print(f"    Última temperatura: {stats['ultima_temperatura']}°C")
+
+                    if len(stats['humedad_promedio']) > 0:
+                        prom_hum = sum(stats['humedad_promedio']) / len(stats['humedad_promedio'])
+                        prom_temp = sum(stats['temperatura_promedio']) / len(stats['temperatura_promedio'])
+                        print(f"    Promedio humedad: {prom_hum:.1f}%")
+                        print(f"    Promedio temperatura: {prom_temp:.1f}°C")
+                else:
+                    print(f"    Sin lecturas aún")
+
+            print("\n" + "=" * 80)
 
     except KeyboardInterrupt:
         print("\n\n" + "=" * 80)
@@ -217,15 +250,35 @@ def ciclo_multisensor():
         total_fallidas = sum(s['fallidas'] for s in estadisticas.values())
         total_lecturas = total_exitosas + total_fallidas
 
-        print(f"\n  Total de lecturas (todos los sensores): {total_lecturas}")
+        hora_fin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"\n  Hora de finalización: {hora_fin}")
+        print(f"  Total de lecturas (todos los sensores): {total_lecturas}")
         print(f"  Exitosas: {total_exitosas}")
         print(f"  Fallidas: {total_fallidas}")
         if total_lecturas > 0:
-            print(f"  Tasa de exito global: {(total_exitosas/total_lecturas*100):.1f}%")
+            print(f"  Tasa de éxito global: {(total_exitosas/total_lecturas*100):.1f}%")
 
         print("\n  Detalle por sensor:")
+        print("  " + "-" * 76)
         for sensor_id, stats in estadisticas.items():
-            print(f"    {sensor_id}: {stats['exitosas']} exitosas, {stats['fallidas']} fallidas")
+            print(f"\n  {sensor_id}:")
+            print(f"    Total lecturas: {stats['exitosas']} exitosas, {stats['fallidas']} fallidas")
+
+            if stats['ultima_lectura']:
+                print(f"    Última lectura: {stats['ultima_lectura']}")
+                print(f"    Última humedad: {stats['ultima_humedad']}%")
+                print(f"    Última temperatura: {stats['ultima_temperatura']}°C")
+
+                if len(stats['humedad_promedio']) > 0:
+                    prom_hum = sum(stats['humedad_promedio']) / len(stats['humedad_promedio'])
+                    prom_temp = sum(stats['temperatura_promedio']) / len(stats['temperatura_promedio'])
+                    min_hum = min(stats['humedad_promedio'])
+                    max_hum = max(stats['humedad_promedio'])
+                    min_temp = min(stats['temperatura_promedio'])
+                    max_temp = max(stats['temperatura_promedio'])
+
+                    print(f"    Promedio humedad: {prom_hum:.1f}% (min: {min_hum}%, max: {max_hum}%)")
+                    print(f"    Promedio temperatura: {prom_temp:.1f}°C (min: {min_temp}°C, max: {max_temp}°C)")
 
         print("\n  Sensores detenidos correctamente.")
         print("=" * 80)

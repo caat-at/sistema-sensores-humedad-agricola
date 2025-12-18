@@ -12,17 +12,32 @@ from dotenv import load_dotenv
 # Cargar variables de entorno
 load_dotenv()
 
-# DATABASE_URL desde variable de entorno o default
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://sensor_app:change_this_password@localhost:5432/sensor_system"
-)
+# DATABASE_URL desde variable de entorno o construir desde componentes
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Crear engine
+if not DATABASE_URL:
+    # Construir desde componentes individuales
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    DB_NAME = os.getenv("DB_NAME", "sensor_system")
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "carlos1981")
+
+    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Agregar SSL para conexiones cloud si es necesario
+if "supabase.co" in DATABASE_URL or "neon.tech" in DATABASE_URL:
+    if "?" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require"
+
+# Crear engine con configuración optimizada para cloud
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,  # Verifica conexión antes de usar
-    echo=False  # Set True para debug SQL
+    pool_size=5,              # Número de conexiones en el pool
+    max_overflow=10,          # Conexiones adicionales permitidas
+    pool_pre_ping=True,       # Verifica conexión antes de usar
+    pool_recycle=3600,        # Reciclar conexiones cada hora
+    echo=False                # Set True para debug SQL
 )
 
 # Session factory

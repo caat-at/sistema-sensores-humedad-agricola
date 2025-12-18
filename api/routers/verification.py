@@ -55,6 +55,7 @@ async def verify_blockchain_vs_db(db: Session = Depends(get_db)):
                     'readings': []
                 }
             rollup_groups[batch_id]['readings'].append({
+                'id': reading.id,
                 'sensor_id': reading.sensor_id,
                 'humidity': reading.humidity_percentage,
                 'temperature': reading.temperature_celsius,
@@ -62,6 +63,7 @@ async def verify_blockchain_vs_db(db: Session = Depends(get_db)):
             })
         else:
             individual_readings.append({
+                'id': reading.id,
                 'sensor_id': reading.sensor_id,
                 'humidity': reading.humidity_percentage,
                 'temperature': reading.temperature_celsius,

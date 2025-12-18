@@ -124,3 +124,27 @@ class SensorAlert(Base):
             name='chk_alert_level'
         ),
     )
+
+
+class RollupError(Base):
+    """Registro de errores en rollups"""
+    __tablename__ = "rollup_errors"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sensor_id = Column(String(50), nullable=False, index=True)
+    execution_date = Column(TIMESTAMP, nullable=False, index=True)
+    error_type = Column(String(50), nullable=False, index=True)  # blockchain_error, validation_error, network_error, etc.
+    error_message = Column(Text, nullable=False)
+    error_details = Column(JSONB, nullable=True)  # Detalles adicionales en JSON
+    readings_count = Column(Integer, nullable=True)  # Cuántas lecturas intentó procesar
+    rollup_batch_id = Column(String(64), nullable=True)  # Si llegó a crear el batch
+    tx_hash = Column(String(64), nullable=True, index=True)  # Si llegó a crear tx
+    retry_count = Column(Integer, default=0)  # Número de reintentos
+    resolved = Column(Boolean, default=False, index=True)  # Si el error fue resuelto
+    resolved_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_rollup_errors_unresolved', 'sensor_id', 'resolved'),
+        Index('idx_rollup_errors_date', 'execution_date'),
+    )
